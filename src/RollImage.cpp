@@ -1179,14 +1179,35 @@ void RollImage::analyzeTrackerBarSpacing(void) {
 
 	FFT(spectrum, input);
 
+	// The centroid histogram is a comb of narrow spikes, so its harmonics are
+	// about as strong as its fundamental, and a roll that uses only part of
+	// its tracks can easily make a harmonic the tallest peak.  The spacing is
+	// known within a narrow band before the transform is run, though: the
+	// paper is getAverageRollWidth() pixels wide and carries
+	// getExpectedTrackerHoleCount() tracks, inset from each edge by roughly
+	// one spacing.  Searching only that band picks out the fundamental.
+	ulongint lowbin  = 51;
+	ulongint highbin = spectrum.size()/4;
+	int trackerholes = getExpectedTrackerHoleCount();
+	double rollwidth = getAverageRollWidth();
+	if ((trackerholes > 0) && (rollwidth > 0.0)) {
+		double expected = rollwidth / (trackerholes + 2.0);
+		ulongint lo = (ulongint)(4096.0 * factor / (expected * 1.25));
+		ulongint hi = (ulongint)(4096.0 * factor / (expected * 0.75));
+		if ((hi > lo + 1) && (lo > lowbin) && (hi < highbin)) {
+			lowbin  = lo;
+			highbin = hi;
+		}
+	}
+
 	vector<double> magnitudeSpectrum(spectrum.size());
-	int maxmagi = factor*2;
+	ulongint maxmagi = lowbin;
 	for (ulongint i=0 ;i<spectrum.size(); i++) {
 		magnitudeSpectrum.at(i) = std::abs(spectrum.at(i));
-		if (i <= 50) {
+		if (i < lowbin) {
 			continue;
 		}
-		if (i > spectrum.size()/4) {
+		if (i > highbin) {
 			continue;
 		}
 		if (magnitudeSpectrum.at(i) > magnitudeSpectrum.at(maxmagi)) {
