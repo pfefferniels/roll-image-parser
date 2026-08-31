@@ -77,6 +77,7 @@ At the start of the file are a list of extracted features from the image:
 | SHIFTS		| Number of automatically detected operator shifts greater than 1/100th of an inch over 1/3 of an inch. |
 | HOLE_SEPARATION	| Distance between muiscal hole centers (i.e., the tracker bar hole spacings). |
 | HOLE_OFFSET		| The offset of the tracker bar spacing pattern with respect to the first column of the image. |
+| TRACKER_GRID_RESIDUAL	| How far the furthest column of holes sits from the tracker bar spacing pattern, in units of HOLE_SEPARATION. About 0.1 for a scan whose hole columns are evenly spaced. Approaching 0.5 the column falls between two tracker positions and its holes are split between them, which the image has to be straightened to fix. |
 | TRACKER_HOLES		| The (esitmated) number of tracker bar holes that reads this roll. |
 | SOFTWARE_DATE		| The compiling date for the software that generates this file. |
 | ANALYSIS_DATE		| The date that the analysis was done. |

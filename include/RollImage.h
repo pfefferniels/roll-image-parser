@@ -117,6 +117,8 @@ class RollImage : public TiffFile, public RollOptions {
 		void            analyzeTrackerBarSpacing      (void);
 		void            analyzeTrackerBarPositions    (void);
 		void            analyzeHorizontalHolePosition (void);
+		double          getTrackerGridResidual        (void);
+		void            warnAboutBentTrackerGrid      (void);
 		void            markTrackerPositions          (bool showAll = false);
 		void            analyzeMidiKeyMapping         (void);
 		void            drawMajorAxes                 (void);

@@ -16,6 +16,7 @@
 #include "CheckSum.h"
 
 #include <algorithm>
+#include <numeric>
 #include <string>
 #include <cmath>
 
@@ -203,6 +204,7 @@ void RollImage::analyze(void) {
 	groupHoles();
 	if (m_debug) { cerr << "STEP 23: analyzeSnakeBites" << endl; }
 	analyzeSnakeBites();
+	warnAboutBentTrackerGrid();
 	if (m_debug) { cerr << "STEP 24: FINSHED WITH ANALYSIS!" << endl; }
 
 #ifndef DONOTUSEFFT
@@ -944,6 +946,52 @@ void RollImage::analyzeHorizontalHolePosition() {
 		cerr << "\n";
 	}
 	*/
+}
+
+
+
+//////////////////////////////
+//
+// RollImage::getTrackerGridResidual -- The largest distance, in tracker
+//     spacings, between an observed column of holes and the grid line it was
+//     assigned to.  A scan whose columns are straight fits to within about a
+//     tenth of a spacing.  At half a spacing a column falls between two grid
+//     lines and its holes are split across both, which reads an expression
+//     track as its neighbour; no choice of spacing and offset can repair that,
+//     because the columns themselves are not evenly spaced in the image.
+//
+
+double RollImage::getTrackerGridResidual(void) {
+	const int dustFloor = 5;  // holes below which a column group is not a track
+
+	auto furtherOffGrid = [&](double worst, const std::pair<double, int>& group) {
+		if (group.second < dustFloor) {
+			return worst;
+		}
+		double index = (group.first - holeOffset) / holeSeparation;
+		return std::max(worst, std::fabs(index - std::round(index)));
+	};
+
+	return std::accumulate(rawRowPositions.begin(), rawRowPositions.end(),
+			0.0, furtherOffGrid);
+}
+
+
+
+//////////////////////////////
+//
+// RollImage::warnAboutBentTrackerGrid --
+//
+
+void RollImage::warnAboutBentTrackerGrid(void) {
+	double residual = getTrackerGridResidual();
+	if (residual < 0.25) {
+		return;
+	}
+	cerr << "WARNING: hole columns sit up to " << residual << " tracker spacings"
+	     << " off the straight grid, so tracks near the paper edges are probably"
+	     << " read as their neighbours.  The image needs straightening across the"
+	     << " roll." << endl;
 }
 
 
@@ -4624,6 +4672,8 @@ void RollImage::insertRollImageProperties(MidiFile& midifile) {
 	midifile.addText(0, 0, ss.str()); ss.str("");
 	ss << "@HOLE_OFFSET:\t\t"       << holeOffset                    << "px";
 	midifile.addText(0, 0, ss.str()); ss.str("");
+	ss << "@TRACKER_GRID_RESIDUAL:\t" << getTrackerGridResidual()    << "";
+	midifile.addText(0, 0, ss.str()); ss.str("");
 	ss << "@TRACKER_HOLES:\t\t"     << trackerholes                  << "";
 	midifile.addText(0, 0, ss.str()); ss.str("");
 	ss << "@HOLE_SOFTWARE:\t\t"     << "https://github.com/pianoroll/roll-image-parser" << "";
@@ -4781,6 +4831,11 @@ std::ostream& RollImage::printRollImageProperties(std::ostream& out) {
 	out << "@@ \t\t\tbar hole spacings)." << std::endl;
 	out << "@@ HOLE_OFFSET:\t\t"       << "The offset of the tracker bar spacing pattern with respect to" << std::endl;
 	out << "@@ \t\t\tthe first column of the image." << std::endl;
+	out << "@@ TRACKER_GRID_RESIDUAL:" << "How far the furthest column of holes sits from the tracker" << std::endl;
+	out << "@@ \t\t\tbar spacing pattern, in units of HOLE_SEPARATION.  About 0.1 for a" << std::endl;
+	out << "@@ \t\t\tscan whose hole columns are evenly spaced.  Approaching 0.5 the" << std::endl;
+	out << "@@ \t\t\tcolumn falls between two tracker positions and its holes are split" << std::endl;
+	out << "@@ \t\t\tbetween them, which the image has to be straightened to fix." << std::endl;
 	out << "@@ TRACKER_HOLES:\t"       << "The (esitmated) number of tracker bar holes that reads this roll." << std::endl;
 	out << "@@ HOLE_SOFTWARE:\t"       << "The software that extracted the holes from the image." << std::endl;
 	out << "@@ SOFTWARE_DATE:\t"       << "The compiling date for the software that generates this file." << std::endl;
@@ -4830,6 +4885,7 @@ std::ostream& RollImage::printRollImageProperties(std::ostream& out) {
 	out << "@SHIFTS:\t\t"            << shifts.size()                 << "\n";
 	out << "@HOLE_SEPARATION:\t"     << holeSeparation                << "px\n";
 	out << "@HOLE_OFFSET:\t\t"       << holeOffset                    << "px\n";
+	out << "@TRACKER_GRID_RESIDUAL:\t" << getTrackerGridResidual()    << "\n";
 	out << "@TRACKER_HOLES:\t\t"     << trackerstring                 << "\n";
 	out << "@HOLE_SOFTWARE:\t\t"     << "https://github.com/pianoroll/roll-image-parser" << "\n";
 	out << "@SOFTWARE_DATE:\t\t"     << __DATE__ << " " << __TIME__ << endl;
