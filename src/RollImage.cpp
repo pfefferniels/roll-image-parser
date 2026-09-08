@@ -1216,10 +1216,14 @@ void RollImage::analyzeTrackerBarSpacing(void) {
 	std::vector<mycomplex> spectrum;
 	int factor = 16;
 	std::vector<mycomplex> input(4096 * factor);
-	for (ulongint i=0; i<4096; i++) {
+	ulongint histogramsize = correctedCentroidHistogram.size();
+	if (histogramsize > 4096) {
+		histogramsize = 4096;
+	}
+	for (ulongint i=0; i<histogramsize; i++) {
 		input.at(i) = correctedCentroidHistogram.at(i);
 	}
-	for (ulongint i=4096; i<input.size(); i++) {
+	for (ulongint i=histogramsize; i<input.size(); i++) {
 		input.at(i) = 0.0;
 	}
 
