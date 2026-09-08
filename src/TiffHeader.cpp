@@ -477,13 +477,11 @@ bool TiffHeader::readDirectoryEntry(std::fstream& input) {
 			this->setRows((ulongint)this->readEntryUInteger(input, datatype, count, id));
 			break;
 
-		case 258: // bits per sample (3 numbers)
-			// Currently ignoring, assuming 8 bits/samples, so read the
-			// parameter data byte offset and throw it away:
-			if (this->isBigTiff()) {
-				readLittleEndian8ByteUInt(input);
-			} else {
-				readLittleEndian4ByteUInt(input);
+		case 258: // bits per sample (one number per sample)
+			// The pixel reader is hard-wired to 8 bits per sample, so anything
+			// else has to be refused rather than read as if it were 8.
+			if (!this->checkBitsPerSample(input, datatype, count)) {
+				return false;
 			}
 			break;
 
@@ -594,6 +592,58 @@ bool TiffHeader::readDirectoryEntry(std::fstream& input) {
 			}
 			std::cerr << "UNKNOWN ID TYPE " << id
 			     << " datatype " << datatype << " count " << count << " value " << value << std::endl;
+	}
+
+	return true;
+}
+
+
+
+//////////////////////////////
+//
+// TiffHeader::checkBitsPerSample -- Require every sample to be 8 bits wide.
+//    Values up to two samples wide sit in the entry itself; longer lists are
+//    stored elsewhere in the file and the entry holds their byte offset.
+//
+
+bool TiffHeader::checkBitsPerSample(std::fstream& input, int datatype, ulonglongint count) {
+	if (datatype != 3) {
+		std::cerr << "Bits per sample must be an unsigned short, but has type "
+		     << datatype << "." << std::endl;
+		return false;
+	}
+
+	std::vector<ushortint> bits(count, 0);
+	ulonglongint entrywidth = this->isBigTiff() ? 8 : 4;
+
+	if (count * 2 <= entrywidth) {
+		for (ulonglongint i=0; i<count; i++) {
+			bits[i] = readLittleEndian2ByteUInt(input);
+		}
+		for (ulonglongint i=count*2; i<entrywidth; i++) {
+			read1UByte(input);
+		}
+	} else {
+		ulonglongint valueoffset;
+		if (this->isBigTiff()) {
+			valueoffset = readLittleEndian8ByteUInt(input);
+		} else {
+			valueoffset = readLittleEndian4ByteUInt(input);
+		}
+		ulonglongint position = input.tellg();
+		this->goToByteIndex(input, valueoffset);
+		for (ulonglongint i=0; i<count; i++) {
+			bits[i] = readLittleEndian2ByteUInt(input);
+		}
+		this->goToByteIndex(input, position);
+	}
+
+	for (ulonglongint i=0; i<count; i++) {
+		if (bits[i] != 8) {
+			std::cerr << "Can only handle 8 bits per sample, but sample " << i
+			     << " has " << bits[i] << " bits." << std::endl;
+			return false;
+		}
 	}
 
 	return true;

@@ -75,6 +75,7 @@ class TiffHeader {
 	private:
 		bool           parseDirectory      (std::fstream& input, ulonglongint diroffset);
 		bool           readDirectoryEntry  (std::fstream& input);
+		bool           checkBitsPerSample  (std::fstream& input, int datatype, ulonglongint count);
 
 	private:
 
