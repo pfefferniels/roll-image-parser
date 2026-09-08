@@ -4311,6 +4311,12 @@ void RollImage::setMidiFileTempo(MidiFile& midifile) {
 		// TPQ is 6 times the tempo at 300 DPI, (so 591 = 6 * 98.5)
 		// 591 is for Red Welte tempo of 98.5 (~3 meters/minute).
 		midifile.setTPQ(591);
+	} else if (m_rollType == "welte-green") {
+		// 420 = 6 * 70, for the T-98's 7 feet/minute (~2.13 meters/minute).
+		// Phillips gives the green Welte that speed against nearly ten feet
+		// per minute for the red, and Welte's own Skala-Rolle 98 is calibrated
+		// at tempo 70.
+		midifile.setTPQ(420);
 	} else if (m_rollType == "88-note") {
 		midifile.setTPQ(6 * 60); 
 	} else {

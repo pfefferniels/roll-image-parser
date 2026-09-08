@@ -343,9 +343,16 @@ void RollOptions::setRollTypeRedWelte(void) {
 
 //////////////////////////////
 //
-// RollOptions::setRollTypeGreenWelte -- Apply settings suitable for Red Welte (T-98) piano rolls.
+// RollOptions::setRollTypeGreenWelte -- Apply settings suitable for Green Welte (T-98) piano rolls.
 //
-// Peter Phillips dissertation: https://ses.library.usyd.edu.au/bitstream/2123/16939/1/Piano%20Rolls.pdf
+// Sources: M. Welte & Soehne, Freiburg, Welte-Mignon Skala-Rolle 98
+// (Gebrauchsanweisung, c. 1925), section 10, and the same firm's Technische
+// Beschreibung, pp. 15-18, for the pedals and the rewind; Kirk Russell, "Red
+// Welte, Green Welte & Welte Licensee Pianos", Mechanical Music Digest
+// 2010.11.25.01, for the expression holes.  Peter Phillips's dissertation
+// (https://ses.library.usyd.edu.au/bitstream/2123/16939/1/Piano%20Rolls.pdf)
+// gives the compass and the paper speed but no hole-by-hole scale, and says
+// nothing about a rewind hole.
 //
 // green Welte tracker holes:
 //
@@ -362,7 +369,7 @@ void RollOptions::setRollTypeRedWelte(void) {
 //    Treble register:
 //       52:  G4                             MIDI Key 67
 //       ...
-//       93:  G7                             MIDI Key 108
+//       93:  C8                             MIDI Key 108
 //   5 expression holes on the treble side:
 //       94:  -5:  Treble Sforzando forte    MIDI Key 109
 //       95:  -4:  Treble Crescendo          MIDI Key 110
@@ -371,14 +378,33 @@ void RollOptions::setRollTypeRedWelte(void) {
 //       98:  -1:  Treble Sforzando piano    MIDI Key 113
 //
 
-void RollOptions::setRollTypeGreenWelte(void) {
-	cerr << "GREEN ROLL NOT IMPLEMENT YET" << endl;
-	exit(1);
+// The paper is 11 1/4 inches wide and carries 98 tracks at 9 to the inch, which
+// puts the outermost track (11.25 - 97/9) / 2 inches in from either edge, or
+// 2.125 spacings.  Measurement on four scans agrees: Julian Dyer's roll 225
+// gives 2.08 and 2.09 on the two sides, and three Stanford scans of two Condon
+// rolls give per-side figures from 2.07 to 2.33.  Most of that spread is how the
+// soft margin is split rather than the rolls -- one test roll scanned twice gives
+// 2.07 and 2.28 -- and the rest is paper measuring 11.24 to 11.28 inches wide.
+// analyzeMidiKeyMapping snaps to the nearest tracker position, so it needs this
+// only to half a spacing, and every measurement is inside a quarter of one.  That
+// tolerance matters here because the rewind cannot serve as a fallback check
+// (see below).
 
+void RollOptions::setRollTypeGreenWelte(void) {
 	m_rollType = "welte-green";
-	m_minTrackerSpacingToPaperEdge = 1.6; // check
-	m_rewindHole = 1;  // 1st hole from left (bass), but only if "long"
-	m_rewindHoleMidi = 16;
+	m_minTrackerSpacingToPaperEdge = 2.125;
+
+	// Hole 1 rewinds the roll, by the same valve that plays Bass Forzando
+	// piano: Welte's own booklet distinguishes the two by length alone, short
+	// perforations for the expression and one very long one for the rewind, and
+	// gives the bellows enough dead travel that a short one cannot trip it.
+	// So there is no rewind hole in the sense assignMidiKeyNumbersToHoles wants
+	// -- one that carries nothing until the end of the roll -- and setting the
+	// MIDI key here would make that check align the tracker grid to hole 1's
+	// first Forzando punch instead.  The T-98 also has no electric cutoff: the
+	// machine stops on a notch in the take-up spool.
+	m_rewindHole = 1;
+	m_rewindHoleMidi = 0;
 	m_trackerHoles = 98;
 
 	m_bass_midi = 16;   // first MIDI Note on bass side of paper
@@ -389,12 +415,17 @@ void RollOptions::setRollTypeGreenWelte(void) {
 	m_bassNotesTrackStartNumberLeft = 6;
 	m_bassNotesTrackStartMidi = 21;
 
-	m_trebleNotesTrackStartNumberLeft = 54;
+	m_trebleNotesTrackStartNumberLeft = 52;
 	m_trebleNotesTrackStartMidi = 67;
 
 	m_trebleExpressionTrackStartNumberLeft = 94;
 	m_trebleExpressionTrackStartMidi = 109;
 
+	// m_tempo_additive_acceleration_per_foot keeps Stahnke's red-Welte 0.22 for
+	// want of a green figure.  It should not simply carry over: the take-up
+	// spool is the narrower of the two, about 1.9 against 2.7 inches, so each
+	// wrap of paper changes its radius by more and the roll ought to speed up
+	// faster over its length.
 	hasExpressionMidiFileSetup();
 }
 
