@@ -2681,11 +2681,14 @@ void RollImage::analyzeLeaders(void) {
 	// std::cerr << "botLeftAvg = "  << botLeftAvg << std::endl;
 	// std::cerr << "botRightAvg = " << botRightAvg << std::endl;
 
-	// as long as the left and right margins remain within a small
-	// threshold (5 pixels), assume that no roll leader is present.
+	// A leader is narrower paper, so it shows in the width between the
+	// margins rather than in either margin on its own.  As long as that
+	// width holds to within a small threshold (5 pixels), assume that no
+	// roll leader is present.  Margins that move together leave the width
+	// alone: that is the roll tracking sideways as the transport takes up,
+	// which is not a leader and must not be read as one.
 	double threshold = 5.0;
-	if ((fabs(topLeftAvg - botLeftAvg) < threshold) &&
-			(fabs(topRightAvg - botRightAvg) < threshold)) {
+	if (fabs((topRightAvg - topLeftAvg) - (botRightAvg - botLeftAvg)) < threshold) {
 		setLeaderIndex(0);
 		setPreleaderIndex(0);
 		m_analyzedLeaders = true;
@@ -4318,7 +4321,7 @@ void RollImage::setMidiFileTempo(MidiFile& midifile) {
 		// at tempo 70.
 		midifile.setTPQ(420);
 	} else if (m_rollType == "88-note") {
-		midifile.setTPQ(6 * 60); 
+		midifile.setTPQ(6 * 60);
 	} else {
 		// set to a neutral guess tempo of 80 for now if unknown, this can be adjusted later.
 		midifile.setTPQ(6 * 80); 
