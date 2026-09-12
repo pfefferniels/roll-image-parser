@@ -20,6 +20,7 @@
 //     --65       Assume a 65-note Duo-art universal piano roll
 //     --88       Assume a 88-note roll
 //     -t         Set the paper/hole brightness boundary (from 0-255, with 249 being the default).
+//     --aspect   Set the maximum hole width/length before it is read as a tear (default 1.25).
 //
 
 #include "RollImage.h"
@@ -43,6 +44,7 @@ int main(int argc, char** argv) {
 	options.define("5|65|65-note|65-hole=b", "Assume 65-note roll");
 	options.define("8|88|88-note|88-hole=b", "Assume 88-note roll");
 	options.define("t|threshold=i:249", "Brightness threshold for hole/paper separation");
+	options.define("aspect=d:1.25", "Maximum hole width/length before it is read as a tear");
 	options.process(argc, argv);
 
 	if (options.getArgCount() != 1) {
@@ -78,6 +80,11 @@ int main(int argc, char** argv) {
 	}
 
 	int threshold = options.getInteger("threshold");
+
+	// The default suits a scan whose pixels respond alike in both directions.
+	// A one-bit scanner that slices generously blooms holes across the sensor
+	// without lengthening them along the transport, which reads as a tear.
+	roll.setAspectRatioThreshold(options.getDouble("aspect"));
 
 	roll.setDebugOn();
 	roll.setWarningOn();
