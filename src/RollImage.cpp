@@ -4320,6 +4320,12 @@ void RollImage::setMidiFileTempo(MidiFile& midifile) {
 		// per minute for the red, and Welte's own Skala-Rolle 98 is calibrated
 		// at tempo 70.
 		midifile.setTPQ(420);
+	} else if (m_rollType == "welte-licensee") {
+		// No one figure belongs here.  Phillips (p. 181) says Licensee rolls
+		// play at a range of paper speeds, so the tempo is the roll's own and
+		// has to come from its printing or its scan header.  480 = 6 * 80 is
+		// the neutral placeholder, not a reading of the format.
+		midifile.setTPQ(6 * 80);
 	} else if (m_rollType == "88-note") {
 		midifile.setTPQ(6 * 60);
 	} else {

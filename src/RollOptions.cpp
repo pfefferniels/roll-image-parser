@@ -430,6 +430,89 @@ void RollOptions::setRollTypeGreenWelte(void) {
 }
 
 
+//////////////////////////////
+//
+// RollOptions::setRollTypeLicensee -- Apply settings suitable for Welte-Mignon
+// (Deluxe) Licensee piano rolls, the American re-cut of the T-100.
+//
+// Sources: Hagmann, Das Welte-Mignon-Klavier, p. 40 f., and Peter Phillips's
+// dissertation p. 123 for the scale; Phillips, Table 4.3, for what separates
+// the Licensee from the green Welte, which is the lock-and-cancel coding
+// rather than the track count.  The layout is the one Stanford's midi2exp
+// reads.
+//
+// The paper is 11 1/4 inches wide with 98 tracks at nine to the inch, so the
+// geometry is the green Welte's and m_minTrackerSpacingToPaperEdge is the same
+// (11.25 - 97/9) / 2 inches, or 2.125 spacings.  The coding is the red Welte's:
+// the Licensee reads the same commands and lays them out the same way, minus
+// the two motor tracks, so the note block and the treble valves sit two
+// positions lower than on the T-100.
+//
+// Licensee tracker holes:
+//
+//   8 expression holes on the bass side:
+//       1:  Mezzoforte-Off                 MIDI Key 16
+//       2:  Mezzoforte-On                  MIDI Key 17
+//       3:  Crescendo-Off                  MIDI Key 18
+//       4:  Crescendo-On                   MIDI Key 19
+//       5:  Forzando-Off                   MIDI Key 20
+//       6:  Forzando-On                    MIDI Key 21
+//       7:  Soft-Pedal-Off                 MIDI Key 22
+//       8:  Soft-Pedal-On                  MIDI Key 23
+//   Then 80 notes from C1 to G7 (MIDI notes 24 to 103):
+//       9:  C1                             MIDI Key 24
+//       ...
+//       51: F#4                            MIDI Key 66
+//    Treble register:
+//       52: G4                             MIDI Key 67
+//       ...
+//       88: G7                             MIDI Key 103
+//   10 expression holes on the treble side:
+//       89: Rewind                         MIDI Key 104
+//       90: Electric-Cutoff                MIDI Key 105
+//       91: Sustain-Pedal-On               MIDI Key 106
+//       92: Sustain-Pedal-Off              MIDI Key 107
+//       93: Forzando-On                    MIDI Key 108
+//       94: Forzando-Off                   MIDI Key 109
+//       95: Crescendo-On                   MIDI Key 110
+//       96: Crescendo-Off                  MIDI Key 111
+//       97: Mezzoforte-On                  MIDI Key 112
+//       98: Mezzoforte-Off                 MIDI Key 113
+//
+// Spencer Chase's scan of roll 225 (Schumann, Traeumerei, Gruenfeld) agrees
+// valve by valve: the occupied tracks are 2-6 and 89, 91, 92, 95, 96, with
+// Crescendo on/off matched at 87 and 86 punches, Forzando at 18 and 19,
+// Sustain at 55 and 53, treble Crescendo at 83 and 85, and one 1.5 inch
+// perforation on track 89, sixteen inches past the last note.
+//
+// Unlike the green Welte, the Licensee has a rewind track of its own, so
+// assignMidiKeyNumbersToHoles can use it as the red Welte does.
+
+void RollOptions::setRollTypeLicensee(void) {
+	m_rollType = "welte-licensee";
+	m_minTrackerSpacingToPaperEdge = 2.125;
+
+	m_rewindHole = 89;  // 89th hole from left (bass)
+	m_rewindHoleMidi = 104;
+	m_trackerHoles = 98;
+
+	m_bass_midi = 16;    // first MIDI Note on bass side of paper
+	m_treble_midi = 113; // first MIDI Note on treble side of paper
+
+	m_bassExpressionTrackStartNumberLeft = 1;
+	m_bassExpressionTrackStartMidi = 16;
+	m_bassNotesTrackStartNumberLeft = 9;
+	m_bassNotesTrackStartMidi = 24;
+	m_trebleNotesTrackStartNumberLeft = 52;
+	m_trebleNotesTrackStartMidi = 67;
+	m_trebleExpressionTrackStartNumberLeft = 89;
+	m_trebleExpressionTrackStartMidi = 104;
+
+	hasExpressionMidiFileSetup();
+}
+
+
+
 // Duo-Art register break at D#4/E4
 
 // Ampico register break at E4/F4

@@ -16,7 +16,7 @@
 // Options:
 //     -r         Assume a Red Welte-Mignon piano roll (T-100).
 //     -g         Assume a Green Welte-Mignon piano roll (T-98).
-//     -l         Assume a Welte-Mignon (Deluxe) Licensee piano roll, but option not yet active.
+//     -l         Assume a Welte-Mignon (Deluxe) Licensee piano roll.
 //     -a         Assume an Ampico [A] (older) piano roll, but option not yet active.
 //     -b         Assume an Ampico B (newer) piano roll, but option not yet active.
 //     -d         Assume a Duo-Art piano roll, but option not yet active.
@@ -65,6 +65,8 @@ int main(int argc, char** argv) {
 		roll.setRollTypeRedWelte();
 	} else if (options.getBoolean("green-welte")) {
 		roll.setRollTypeGreenWelte();
+	} else if (options.getBoolean("licensee-welte")) {
+		roll.setRollTypeLicensee();
 	} else if (options.getBoolean("65-note")) {
 		roll.setRollType65Note();
 	} else if (options.getBoolean("88-note")) {
@@ -73,6 +75,7 @@ int main(int argc, char** argv) {
 		cerr << "A Roll type is required:" << endl;
 		cerr << "   -r   == for red Welte rolls"   << endl;
 		cerr << "   -g   == for green Welte rolls" << endl;
+		cerr << "   -l   == for Welte Licensee rolls" << endl;
 		cerr << "   --65 == for 65-note rolls"     << endl;
 		cerr << "   --88 == for 88-note rolls"     << endl;
 		exit(1);
